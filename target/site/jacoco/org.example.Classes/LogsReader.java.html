@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogsReader.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">trace-finder</a> &gt; <a href="index.source.html" class="el_package">org.example.Classes</a> &gt; <span class="el_source">LogsReader.java</span></div><h1>LogsReader.java</h1><pre class="source lang-java linenums"><span class="fc" id="L1">package org.example.Classes;</span>
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
+import java.util.ArrayList;
+import java.util.List;
+
+<span class="nc" id="L13">public class LogsReader {</span>
+
+<span class="fc" id="L15">    public static final DateTimeFormatter FORMAT =</span>
+<span class="fc" id="L16">        DateTimeFormatter.ofPattern(&quot;uuuu-MM-dd HH:mm:ss&quot;).withResolverStyle(ResolverStyle.STRICT);</span>
+
+    public record ParseResult(List&lt;LogEntry&gt; validEntries, List&lt;LineIssue&gt; malformedLines){}
+
+    public record LogEntry(int lineNumber,String rawline, LocalDateTime timestamp, String level, String sourceIp, String target, String action) {}
+
+    public record LineIssue(int lineNumber, String rawContent) {}
+    // used for both malformed lines and unknown patterns
+
+    public record ScoredEntry(LogEntry entry, int severityScore) {}
+
+
+    public static ParseResult parse(String filePath) throws IOException {
+        try{
+<span class="nc" id="L30">            Path logfilePath = Path.of(filePath);</span>
+<span class="nc" id="L31">            List&lt;String&gt; lines = Files.readAllLines(logfilePath);</span>
+<span class="nc" id="L32">            return parseLines(lines);</span>
+<span class="nc" id="L33">        } catch (IOException e){</span>
+<span class="nc" id="L34">            throw new IOException(&quot;Cannot read log file &quot; + filePath + &quot;: &quot; + e.getMessage(), e);</span>
+        }
+        
+        
+    }
+
+    public static ParseResult parseLines(List&lt;String&gt; lines){
+<span class="fc" id="L41">        List&lt;LogEntry&gt; validEntries = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L42">        List&lt;LineIssue&gt; malformedLines = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        for (int i = 0; i &lt; lines.size(); i++) {</span>
+<span class="fc" id="L45">            int lineNumber = i + 1;</span>
+<span class="fc" id="L46">            String rawLines = lines.get(i);</span>
+
+            // check empty
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (rawLines.trim().isEmpty()){</span>
+<span class="fc" id="L50">                malformedLines.add( new LineIssue(lineNumber, rawLines));</span>
+<span class="fc" id="L51">                continue;</span>
+            }
+
+            // split on | only
+<span class="fc" id="L55">            String[] fields= rawLines.split(&quot;\\|&quot;, -1);</span>
+
+            //field count check
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            if (fields.length != 5){</span>
+<span class="fc" id="L59">                malformedLines.add(new LineIssue(lineNumber, rawLines));</span>
+<span class="fc" id="L60">                continue;</span>
+            }
+            //trim fields
+<span class="fc bfc" id="L63" title="All 2 branches covered.">            for (int y = 0; y &lt; fields.length; y++){</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">                if (fields[y] != null) {</span>
+<span class="fc" id="L65">                    fields[y] = fields[y].trim();</span>
+                }
+            }
+
+            // try parsing field[0] as LocalDateTime with TIMESTAMP_FORMAT catch DateTimeParseException -&gt; malformed
+            
+            LocalDateTime ts;
+            try {
+<span class="fc" id="L73">                ts = LocalDateTime.parse(fields[0].trim(), FORMAT);</span>
+
+<span class="fc" id="L75">            } catch (DateTimeParseException e) {</span>
+<span class="fc" id="L76">                malformedLines.add(new LineIssue(lineNumber, rawLines));</span>
+<span class="fc" id="L77">                continue;</span>
+            }
+
+            // build LogEntry and add to validEntries
+<span class="fc" id="L81">            LogEntry entry = new LogEntry(lineNumber, rawLines, ts, fields[1], fields[2], fields[3], fields[4]);</span>
+
+<span class="fc" id="L83">            validEntries.add(entry);</span>
+
+        }
+<span class="fc" id="L86">        return new ParseResult(validEntries, malformedLines);</span>
+    }
+
+    //Needs to retrieve the file path from the main class. It could get it from command validator class directly but the instructions are that Main Orchestrates
+    //If it doesn't exist or can't be read, call the exception
+    //Tracks malformed lines and also the correctly structured lines.
+    //Returns both datasets to the main class.
+    //How to check well structured logs:
+    //Use string builder, and separate the logs where there is a delimeter |. If it doesn't exist, then the wrong delimeter was used.
+    //After splitting each part of the log, check that it has all the required info.
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

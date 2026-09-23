@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RulebookAnalyzer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">trace-finder</a> &gt; <a href="index.source.html" class="el_package">org.example.Classes</a> &gt; <span class="el_source">RulebookAnalyzer.java</span></div><h1>RulebookAnalyzer.java</h1><pre class="source lang-java linenums">package org.example.Classes;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+
+
+<span class="fc" id="L9">public class RulebookAnalyzer {</span>
+
+<span class="fc" id="L11">    private static final List&lt;String&gt; EXPECTED_HEADERS = Arrays.asList(&quot;level&quot;, &quot;severity_score&quot;);</span>
+<span class="fc" id="L12">    private static final int FLAG_THRESHOLD = 3;</span>
+
+<span class="fc" id="L14">    List&lt;LogsReader.ScoredEntry&gt; flaggedLogs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L15">    List&lt;LogsReader.LogEntry&gt; unknownLogs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L16">    List&lt;String&gt; flaggedIpsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L17">    Set&lt;String&gt; flaggedIPsUnique = new HashSet&lt;&gt;(); //Uniquely stores IP Addresses that have been flagged. We will then use that dataset to see how many times...</span>
+    //...each of these records appears in flagged logs.
+<span class="fc" id="L19">    Map&lt;String, Integer&gt; flaggedIPsCount = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L20">    Map&lt;String, Integer&gt; stats = new LinkedHashMap&lt;&gt;();</span>
+
+<span class="fc" id="L22">    Map&lt;String, Integer&gt; rulebookContent = new LinkedHashMap&lt;&gt;();</span>
+
+
+    String rulebookPath;
+    public void loadRulebook(String path) {
+<span class="pc bpc" id="L27" title="1 of 4 branches missed.">        if (path == null || path.isBlank()) {</span>
+<span class="fc" id="L28">            throw new IllegalArgumentException(&quot;Rulebook path has not been set.&quot;);</span>
+        }
+
+<span class="fc" id="L31">        Path p = Path.of(path);</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if (!Files.exists(p)) {</span>
+<span class="fc" id="L33">            throw new IllegalArgumentException(&quot;Rulebook not found: &quot; + path);</span>
+        }
+
+        List&lt;String&gt; lines;
+        try {
+<span class="nc" id="L38">            lines = Files.readAllLines(p);</span>
+<span class="nc" id="L39">        } catch (IOException e) {</span>
+<span class="nc" id="L40">            throw new IllegalArgumentException(</span>
+<span class="nc" id="L41">                &quot;Cannot read rulebook &quot; + path + &quot;: &quot; + e.getMessage());</span>
+        }
+<span class="nc" id="L43">        parseRulebook(lines, path);</span>
+
+<span class="nc" id="L45">    }</span>
+
+    public void parseRulebook(List&lt;String&gt; lines, String path) {
+<span class="fc" id="L48">        rulebookContent.clear();</span>
+<span class="fc" id="L49">        stats.clear();</span>
+
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (lines.isEmpty()) {</span>
+<span class="fc" id="L52">            throw new IllegalArgumentException(&quot;Rulebook &quot; + path + &quot; is empty.&quot;);</span>
+        }
+
+<span class="fc" id="L55">        List&lt;String&gt; headers = Arrays.stream(lines.get(0).split(&quot;,&quot;, -1))</span>
+<span class="fc" id="L56">                    .map(String::trim)</span>
+<span class="fc" id="L57">                    .toList();</span>
+
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (!EXPECTED_HEADERS.equals(headers)) {</span>
+<span class="fc" id="L60">            throw new IllegalArgumentException(&quot;Rulebook &quot; + path</span>
+<span class="fc" id="L61">                + &quot; must have the header 'level,severity_score' but found: &quot; + headers);</span>
+        }
+        
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (int i = 1; i &lt; lines.size(); i++){</span>
+<span class="fc" id="L65">            String line = lines.get(i);</span>
+<span class="fc" id="L66">            int lineNumber = i + 1;</span>
+
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (line.isBlank()) continue;</span>
+
+<span class="fc" id="L70">            String [] parts = line.split(&quot;,&quot;, -1);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            if (parts.length != 2){</span>
+<span class="fc" id="L72">                throw new  IllegalArgumentException(&quot;RuleBook &quot; + path + &quot;, line &quot; + lineNumber</span>
+<span class="fc" id="L73">                + &quot;: expected 2 columns but found &quot; + parts.length + &quot;: &quot; + line);</span>
+            } 
+            try {
+<span class="fc" id="L76">                rulebookContent.put(parts[0].trim(), Integer.parseInt(parts[1].trim()));</span>
+<span class="fc" id="L77">            } catch (NumberFormatException e) {</span>
+<span class="fc" id="L78">                throw new IllegalArgumentException(&quot;Rulebook &quot; + path + &quot;, line &quot; + lineNumber</span>
+<span class="fc" id="L79">                    + &quot;: severity_score is not a number: &quot; + parts[1].trim());</span>
+            }
+        }
+        //every level the ruleBook defines appears in the summary, even with 0 entries
+<span class="fc" id="L83">        rulebookContent.keySet().forEach(level -&gt; stats.put(level, 0));</span>
+            
+<span class="fc" id="L85">    }</span>
+
+    public void checkLevel(List&lt;LogsReader.LogEntry&gt; validEntries) {
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        for (LogsReader.LogEntry entry : validEntries) {</span>
+<span class="fc" id="L90">            Integer score = rulebookContent.get(entry.level());</span>
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (score == null){</span>
+<span class="fc" id="L93">                unknownLogs.add(entry);</span>
+<span class="fc" id="L94">                continue;</span>
+            }
+<span class="fc" id="L96">            stats.merge(entry.level(), 1, Integer::sum);</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (score &gt;= FLAG_THRESHOLD) {</span>
+<span class="fc" id="L98">                flaggedLogs.add(new LogsReader.ScoredEntry(entry, score)); </span>
+            }
+        }
+<span class="fc" id="L101">    }</span>
+
+    //accepts list of valid enties from logreader
+    public void suspiciousIPs (List&lt;LogsReader.LogEntry&gt; validEntries) {
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (LogsReader.ScoredEntry scored : flaggedLogs) {</span>
+            //Now this is the most optimal solution
+<span class="fc" id="L107">            flaggedIPsUnique.add(scored.entry().sourceIp());</span>
+        }
+
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for (LogsReader.LogEntry log : validEntries) {</span>
+            //the valid entries are already parsed
+<span class="fc" id="L112">            String ip = log.sourceIp();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (flaggedIPsUnique.contains(ip)) {</span>
+<span class="fc" id="L114">                flaggedIPsCount.merge(ip, 1, Integer::sum);</span>
+            }
+                
+        }
+
+<span class="fc" id="L119">    }</span>
+
+    //Results
+
+    public Map&lt;String, Integer&gt; getStats() {
+<span class="fc" id="L124">        return new LinkedHashMap&lt;&gt;(stats);</span>
+    }
+
+    public Map&lt;String, Integer&gt; getSuspiciousIp () {
+<span class="fc" id="L128">        Map&lt;String, Integer&gt; sortedFlaggedIPsCount = flaggedIPsCount.entrySet().stream()</span>
+<span class="fc" id="L129">            .sorted(Map.Entry.&lt;String, Integer&gt;comparingByValue().reversed())</span>
+<span class="fc" id="L130">            .collect(java.util.stream.Collectors.toMap(</span>
+<span class="fc" id="L131">                Map.Entry::getKey,</span>
+<span class="fc" id="L132">                Map.Entry::getValue,</span>
+<span class="pc" id="L133">                (oldValue, newValue) -&gt; oldValue, // Merge function (not needed here but required by syntax)</span>
+<span class="fc" id="L134">                LinkedHashMap::new                // Guarantees the sorted order is kept</span>
+            ));
+
+<span class="fc" id="L137">        return sortedFlaggedIPsCount;</span>
+    }
+
+    public List&lt;String&gt; getFlaggedEntries () {
+<span class="fc" id="L141">        return flaggedLogs.stream()</span>
+<span class="fc" id="L142">            .sorted(Comparator.comparingInt(LogsReader.ScoredEntry::severityScore).reversed())</span>
+<span class="fc" id="L143">            .map(scored -&gt; scored.entry().rawline())</span>
+<span class="fc" id="L144">            .toList();</span>
+    }
+        
+    public List&lt;String&gt; getUnknownLogs () {
+<span class="fc" id="L148">        return unknownLogs.stream()</span>
+<span class="fc" id="L149">            .map(entry -&gt; &quot;Line &quot; + entry.lineNumber() + &quot;: &quot; + entry.rawline())</span>
+<span class="fc" id="L150">            .toList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

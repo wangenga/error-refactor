@@ -1,0 +1,10 @@
+org/example/Classes/LogsReader$LogEntry.class
+org/example/Main.class
+org/example/Classes/LogsReader$ScoredEntry.class
+org/example/Classes/RulebookAnalyzer.class
+org/example/Classes/LogsReader$LineIssue.class
+org/example/Exceptions/WrongNumberOfArguments.class
+org/example/Classes/LogsReader$ParseResult.class
+org/example/Classes/LogsReader.class
+org/example/Classes/CommandValidator.class
+org/example/Classes/ReportGenerator.class

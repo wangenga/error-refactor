@@ -1,0 +1,17 @@
+-------------------------------------------------------------------------------
+Test set: org.example.Classes.CommandValidatorTest
+-------------------------------------------------------------------------------
+Tests run: 13, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.073 s <<< FAILURE! -- in org.example.Classes.CommandValidatorTest
+org.example.Classes.CommandValidatorTest.wrongArgCounts_throwWithCountAndUsage -- Time elapsed: 0.017 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.example.Exceptions.WrongNumberOfArguments>
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3234)
+	at org.example.Classes.CommandValidatorTest.messageFor(CommandValidatorTest.java:18)
+	at org.example.Classes.CommandValidatorTest.wrongArgCounts_throwWithCountAndUsage(CommandValidatorTest.java:42)
+Caused by: org.example.Exceptions.WrongNumberOfArguments: Expected 3 or 5 arguments but got 0.
+Usage: java -jar tracefinder.jar <logs> <rules.csv> <report> ["yyyy-MM-dd HH:mm:ss" "yyyy-MM-dd HH:mm:ss"]
+	at org.example.Classes.CommandValidator.parse(CommandValidator.java:21)
+	at org.example.Classes.CommandValidatorTest.lambda$0(CommandValidatorTest.java:18)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	... 3 more
+

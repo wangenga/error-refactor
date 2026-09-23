@@ -1,0 +1,28 @@
+=== Log Analysis Report ===
+Generated: 2026-09-23 08:53:34
+Time Window: 2024-03-15 03:42:11 to 2024-03-15 03:42:12
+
+--- Activity Summary ---
+INFO: 0
+WARN: 0
+ERROR: 0
+ALERT: 0
+
+--- Flagged Entries ---
+None found 
+
+--- Suspicious Activity by IP ---
+None found
+
+--- Unknown Patterns ---
+Line 16: 2024-03-15 03:42:11 | CRIT | 203.0.113.42 | /admin | escalated
+
+--- Malformed Lines ---
+Line 12: 
+Line 25: 2024-03-15 05:00:00 | WARN | 203.0.113.42 | /login
+Line 26: 2024-03-15 05:05:00 / INFO / 192.168.1.45 / /home / accessed
+Line 27: not-a-timestamp | INFO | 192.168.1.45 | /home | accessed
+Line 66: 
+Line 69: 2024-03-15 12:30:00 | WARN | 172.16.0.3 | /login
+Line 74: 2024-03-15 13:50:00 / WARN / 45.33.32.19 / /login / failed
+Line 93: bad-timestamp-here | ERROR | 45.33.32.19 | /api/upload | rejected
